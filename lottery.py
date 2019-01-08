@@ -1,3 +1,4 @@
+import time
 def Combinations(L, k):
     """List all combinations: choose k elements from list L"""
     n = len(L)
@@ -14,5 +15,8 @@ def Combinations(L, k):
     return result, len(result)
  
 if __name__ == '__main__':
+    start = time.time()
     result, number = Combinations(range(48), 4)
+    end = time.time()
+    print(end - start)
     print(number)
