@@ -28,7 +28,7 @@ aspect.addSuffix(person, 'say', (item) => {
 
 person.say('这是第一个参数', '第二个参数')
 
-//第二种实现，高阶组件
+//第二种实现，高阶组件，用到了装饰器，需要es7的支持
 function filterContent(Component) {
     const tmp = (...args) => {
         const arr = args.map((item) => {
@@ -39,7 +39,20 @@ function filterContent(Component) {
     return tmp
 }
 
+function addSuffixByDeco(suffix) {
+    return function(Component){
+        const tmp = (...args) => {
+            const arr = args.map((item) => {
+                return item + suffix
+            })
+            new Component(...arr)
+        }
+        return tmp
+    }
+}
+
 @filterContent
+@addSuffixByDeco('Dailoge')
 class Submit {
     constructor(...args) {
         console.log(...args)
