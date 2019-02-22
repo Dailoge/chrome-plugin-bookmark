@@ -1,0 +1,23 @@
+{
+    "name": "书签搜索神器",
+    "manifest_version": 2,
+    "version": "1.0",
+    "description": "书签搜索神器",
+    "browser_action": {
+        "default_icon": "images/book.png",
+        "default_title": "我是书签搜索神器",
+        "default_popup": "popup.html"
+    },
+    "icons": {
+        "16": "images/book.png",
+        "48": "images/book.png",
+        "128": "images/book.png"
+    },
+    "permissions": [
+        "tabs",
+        "bookmarks",
+        "chrome://favicon/*",
+        "http://*.google.com/",
+        "unlimitedStorage"
+    ]
+}
