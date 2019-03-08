@@ -2,6 +2,7 @@ const list = document.querySelector('#list')
 const form = document.querySelector('#form')
 const keyword = document.querySelector('#keyword')
 const textMaxLength = 70
+const newListNum = 10
 
 //主函数
 function getBookByKeyword(word) {
@@ -9,9 +10,13 @@ function getBookByKeyword(word) {
     //这方法是异步的
     chrome.bookmarks.getTree(function (bookmarkArray) {
         let result = []
-        keywords.split(' ').map((keyword) => {
-            result = result.concat(traverse(bookmarkArray, keyword))
-        })
+        if (keywords.substr(0, 3) == 'new') {
+            result = showNewSaveList(bookmarkArray, keywords)
+        } else {
+            keywords.split(' ').map((keyword) => {
+                result = result.concat(traverse(bookmarkArray, keyword))
+            })
+        }
         //不存在搜索结果
         if (!result.length && keywords) {
             const li = createLi({
@@ -20,12 +25,8 @@ function getBookByKeyword(word) {
                 keywords: keywords
             })
             list.appendChild(li)
-            return 
+            return
         }
-        //按时间排序
-        result.sort((a, b) => {
-            return b.dateAdded - a.dateAdded
-        })
         //去重
         const tmp = []
         result = result.filter((item) => {
@@ -36,6 +37,10 @@ function getBookByKeyword(word) {
                 return true
             }
         })
+        //按时间排序
+        result.sort((a, b) => {
+            return b.dateAdded - a.dateAdded
+        })
         const liArray = result.map((item) => {
             let className = ''
             return createLi({
@@ -45,12 +50,29 @@ function getBookByKeyword(word) {
                 keywords: keywords
             })
         })
-        //再次排序，按搜索到最多关键词排序
-        const reg = /class="word"/img
-        liArray.sort((a, b) => {
-            return b.innerHTML.match(reg).length - a.innerHTML.match(reg).length
-        })
-        liArray.map((item, index)=>{
+        //再次排序，按搜索到最多关键词排序,只有一个关键词就不用按关键词排序了
+        if (keywords.trim().split(' ').length > 1) {
+            const tmpStr = keywords.trim().replace(/\s+/img, '|')
+            const reg = new RegExp('(' + tmpStr + ')', 'img')
+            liArray.sort((a, b) => {
+                let bResult = b.innerHTML.match(reg)
+                let aResult = a.innerHTML.match(reg)
+                if (bResult) {
+                    if (aResult) {
+                        //转小写去重
+                        bResult = bResult.map((item)=>item.toLowerCase())
+                        aResult = aResult.map((item)=>item.toLowerCase())
+                        const num = new Set(bResult).size - new Set(aResult).size
+                        return num
+                    } else {
+                        return true
+                    }
+                } else {
+                    return false
+                }
+            })
+        }
+        liArray.map((item, index) => {
             let className = ''
             switch (index) {
                 case 0:
@@ -72,20 +94,38 @@ function getBookByKeyword(word) {
 }
 
 //搜索遍历书签树
-function traverse(data, keyword) {
+function traverse(data, keyword, keywordIsNeed = true) {
     let result = []
-    if (keyword == ' ' || keyword == '') return result
+    if (keywordIsNeed && (keyword == ' ' || keyword == '')) return result
     data.map((item) => {
-        if (item.title.toLowerCase().includes(keyword)) {
+        if (item.title.toLowerCase().includes(keyword) && item.url) { //使用item.url排除文件夹
             const tmp = JSON.parse(JSON.stringify(item))
             // tmp.keyword = keyword
             result.push(tmp)
         }
         if (item.children && Array.isArray(item.children)) {
-            result = result.concat(traverse(item.children, keyword))
+            result = result.concat(traverse(item.children, keyword, keywordIsNeed))
         }
     })
     return result
+}
+
+//监听调用最新保存的书签，用法：new number
+function showNewSaveList(data, keywords) {
+    let number = newListNum
+    try {
+        number = keywords.split(' ').length && parseInt(keywords.split(' ')[1])
+        if (isNaN(number) || !number) {
+            number = newListNum
+        }
+    } catch (e) {
+        console.error(e)
+    }
+    let result = traverse(data, '', false)
+    result.sort((a, b) => {
+        return b.dateAdded - a.dateAdded
+    })
+    return result.slice(0, number)
 }
 
 //创建每个li标签
@@ -106,7 +146,7 @@ function createLi({ text = '', url = '', className = '', keywords = '' }) {
         } else if (text.length > textMaxLength) {
             tmpText = tmpText.substr(0, textMaxLength) + '...'
         }
-        //给关键字给一个className
+        //给关键字一个className
         tmpText = tmpText.replace(new RegExp(keyword, 'img'), function (a0, index, text) {
             const span = `<span class="word">${a0}</span>`
             return span
@@ -115,9 +155,9 @@ function createLi({ text = '', url = '', className = '', keywords = '' }) {
 
     li.className = className
     const urlResult = url.match(/(http:|https:)\/\/(.*?)\//)
-    if(urlResult && urlResult.length){
+    if (urlResult && urlResult.length) {
         img.src = 'chrome://favicon/' + urlResult[0]
-    }else{
+    } else {
         img.src = '../images/star.png'
     }
     li.appendChild(img)
