@@ -60,8 +60,8 @@ function getBookByKeyword(word) {
                 if (bResult) {
                     if (aResult) {
                         //转小写去重
-                        bResult = bResult.map((item)=>item.toLowerCase())
-                        aResult = aResult.map((item)=>item.toLowerCase())
+                        bResult = bResult.map((item) => item.toLowerCase())
+                        aResult = aResult.map((item) => item.toLowerCase())
                         const num = new Set(bResult).size - new Set(aResult).size
                         return num
                     } else {
@@ -136,22 +136,7 @@ function createLi({ text = '', url = '', className = '', keywords = '' }) {
     if (!url) {
         url = 'https://www.baidu.com/s?wd=' + keywords
     }
-    let tmpText = text
-    keywords.split(' ').map((keyword) => {
-        if (keyword == ' ' || keyword == '') return
-        //关键字在textMaxLength之后
-        const position = tmpText.toLowerCase().indexOf(keyword.toLowerCase())
-        if (keyword.length + position > textMaxLength) {
-            tmpText = tmpText.substr(position - textMaxLength / 2, textMaxLength) + '...'
-        } else if (text.length > textMaxLength) {
-            tmpText = tmpText.substr(0, textMaxLength) + '...'
-        }
-        //给关键字一个className
-        tmpText = tmpText.replace(new RegExp(keyword, 'img'), function (a0, index, text) {
-            const span = `<span class="word">${a0}</span>`
-            return span
-        })
-    })
+    let tmpText = addKeywordClass(text, keywords)
 
     li.className = className
     const urlResult = url.match(/(http:|https:)\/\/(.*?)\//)
@@ -168,6 +153,38 @@ function createLi({ text = '', url = '', className = '', keywords = '' }) {
     return li
 }
 
+function addKeywordClass(tmpText, keywords){
+    //保存关键字位置的数组
+    const positionData = []
+    const text = tmpText
+    keywords.split(' ').map((keyword) => {
+        if (keyword == ' ' || keyword == '') return
+        //关键字在textMaxLength之后
+        const position = tmpText.toLowerCase().indexOf(keyword.toLowerCase())
+        if (keyword.length + position > textMaxLength) {
+            tmpText = tmpText.substr(position - textMaxLength / 2, textMaxLength) + '...'
+        } else if (text.length > textMaxLength) {
+            tmpText = tmpText.substr(0, textMaxLength) + '...'
+        }
+        //给关键字一个className
+        tmpText = tmpText.replace(new RegExp(keyword, 'img'), function (a0, index, text) {
+            positionData.push({
+                keyword: a0,
+                index
+            })
+            return a0
+        })
+    })
+    //先替换最末尾的关键字，如果先替换前面的话，后面的关键字的位置就发生改变了
+    positionData.sort((a, b) => {
+        return b.index - a.index
+    })
+    positionData.map((item) => {
+        tmpText = tmpText.slice(0, item.index) + `<span class="word">${item.keyword}</span>` + tmpText.slice(item.index + item.keyword.length)
+    })
+    return tmpText
+}
+
 //监听回车，提交事件
 form.addEventListener('submit', function (e) {
     const word = keyword.value
@@ -175,10 +192,10 @@ form.addEventListener('submit', function (e) {
     list.innerHTML = ''
     getBookByKeyword(word)
     console.log('form submit')
-    /*但是我们测试的时候我们会发现IE下能够阻止表单提交，但是FF、chrome等浏览器并不能阻止表单提交
+    /*return false; 但是我们测试的时候我们会发现IE下能够阻止表单提交，但是FF、chrome等浏览器并不能阻止表单提交
     原因是：Object EventListener：This is an ECMAScript function reference. This method has no return value. The parameter is a Event object.
     可见，listener是没有返回值的（写了也不会认）
-    return false*/
+    */
     e.preventDefault()
 })
 
