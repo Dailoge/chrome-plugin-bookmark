@@ -3,15 +3,20 @@ const form = document.querySelector('#form')
 const keyword = document.querySelector('#keyword')
 const textMaxLength = 70
 const newListNum = 10
+let isReg = false
 
 //主函数
 function getBookByKeyword(word) {
-    const keywords = word.toLowerCase()
+    let keywords = word.toLowerCase()
     //这方法是异步的
     chrome.bookmarks.getTree(function (bookmarkArray) {
+        isReg = keywords[0] === '/' && keywords[keywords.length - 1] === '/' && keywords.length > 2
         let result = []
         if (keywords.substr(0, 3) == 'new') {
             result = showNewSaveList(bookmarkArray, keywords)
+        } else if (isReg) {
+            keywords = new RegExp(keywords.slice(1, -1), 'img')
+            result = searchByRegExp(bookmarkArray, keywords)
         } else {
             keywords.split(' ').map((keyword) => {
                 result = result.concat(traverse(bookmarkArray, keyword))
@@ -51,7 +56,7 @@ function getBookByKeyword(word) {
             })
         })
         //再次排序，按搜索到最多关键词排序,只有一个关键词就不用按关键词排序了
-        if (keywords.trim().split(' ').length > 1) {
+        if (!isReg && keywords.trim().split(' ').length > 1) {
             const tmpStr = keywords.trim().replace(/\s+/img, '|')
             const reg = new RegExp('(' + tmpStr + ')', 'img')
             liArray.sort((a, b) => {
@@ -110,6 +115,21 @@ function traverse(data, keyword, keywordIsNeed = true) {
     return result
 }
 
+//匹配使用正则搜索
+function searchByRegExp(data, reg) {
+    reg = new RegExp(reg, 'img')
+    let result = []
+    data.map((item) => {
+        if (item.title.match(reg)) {
+            result.push(item)
+        }
+        if (item.children && Array.isArray(item.children)) {
+            result = result.concat(searchByRegExp(item.children, reg))
+        }
+    })
+    return result
+}
+
 //监听调用最新保存的书签，用法：new number
 function showNewSaveList(data, keywords) {
     let number = newListNum
@@ -153,35 +173,41 @@ function createLi({ text = '', url = '', className = '', keywords = '' }) {
     return li
 }
 
-function addKeywordClass(tmpText, keywords){
+function addKeywordClass(tmpText, keywords) {
     //保存关键字位置的数组
     const positionData = []
     const text = tmpText
-    keywords.split(' ').map((keyword) => {
-        if (keyword == ' ' || keyword == '') return
-        //关键字在textMaxLength之后
-        const position = tmpText.toLowerCase().indexOf(keyword.toLowerCase())
-        if (keyword.length + position > textMaxLength) {
-            tmpText = tmpText.substr(position - textMaxLength / 2, textMaxLength) + '...'
-        } else if (text.length > textMaxLength) {
-            tmpText = tmpText.substr(0, textMaxLength) + '...'
-        }
-        //给关键字一个className
-        tmpText = tmpText.replace(new RegExp(keyword, 'img'), function (a0, index, text) {
-            positionData.push({
-                keyword: a0,
-                index
-            })
-            return a0
+    if (isReg) {
+        tmpText = tmpText.replace(keywords, function (a0, index) {
+            return `<span class="word">${a0}</span>`
         })
-    })
-    //先替换最末尾的关键字，如果先替换前面的话，后面的关键字的位置就发生改变了
-    positionData.sort((a, b) => {
-        return b.index - a.index
-    })
-    positionData.map((item) => {
-        tmpText = tmpText.slice(0, item.index) + `<span class="word">${item.keyword}</span>` + tmpText.slice(item.index + item.keyword.length)
-    })
+    } else {
+        keywords.split(' ').map((keyword) => {
+            if (keyword == ' ' || keyword == '') return
+            //关键字在textMaxLength之后
+            const position = tmpText.toLowerCase().indexOf(keyword.toLowerCase())
+            if (keyword.length + position > textMaxLength) {
+                tmpText = tmpText.substr(position - textMaxLength / 2, textMaxLength) + '...'
+            } else if (text.length > textMaxLength) {
+                tmpText = tmpText.substr(0, textMaxLength) + '...'
+            }
+            //记录关键词的位置
+            tmpText = tmpText.replace(new RegExp(keyword, 'img'), function (a0, index, text) {
+                positionData.push({
+                    keyword: a0,
+                    index
+                })
+                return a0
+            })
+        })
+        //先替换最末尾的关键字，如果先替换前面的话，后面的关键字的位置就发生改变了
+        positionData.sort((a, b) => {
+            return b.index - a.index
+        })
+        positionData.map((item) => {
+            tmpText = tmpText.slice(0, item.index) + `<span class="word">${item.keyword}</span>` + tmpText.slice(item.index + item.keyword.length)
+        })
+    }
     return tmpText
 }
 
