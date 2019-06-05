@@ -1,6 +1,7 @@
 const list = document.querySelector('#list')
 const form = document.querySelector('#form')
 const keyword = document.querySelector('#keyword')
+const icon = document.querySelector('#icon')
 const textMaxLength = 70
 const newListNum = 10
 let isReg = false
@@ -156,6 +157,7 @@ function getRandomBook(data) {
     const books = traverse(data, '', false)
     const bookLength = books.length
     const indexArr = []
+    icon.title = `当前拥有书签${bookLength}条`
     for (var i = 0; i < 10; i++) {
         indexArr.push(Math.floor(Math.random() * bookLength))
     }
@@ -252,3 +254,8 @@ keyword.addEventListener('input', function (e) {
     console.log('input onchange')
     e.preventDefault()
 })
+
+// 每次打开时，展示随机的书签
+document.body.onload = ()=>{
+    getBookByKeyword('')
+}
