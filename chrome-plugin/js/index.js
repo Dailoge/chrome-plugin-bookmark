@@ -10,6 +10,7 @@ let isReg = false
 function getBookByKeyword(word) {
     let keywords = word.toLowerCase()
     //这方法是异步的
+    console.dir(chrome.bookmarks)
     chrome.bookmarks.getTree(function (bookmarkArray) {
         isReg = keywords[0] === '/' && keywords[keywords.length - 1] === '/' && keywords.length > 2
         let result = []
@@ -52,10 +53,12 @@ function getBookByKeyword(word) {
         const liArray = result.map((item) => {
             let className = ''
             return createLi({
+                id: item.id,
                 text: item.title,
                 url: item.url,
                 className: className,
-                keywords: keywords
+                keywords: keywords,
+                date: item.dateAdded
             })
         })
         //再次排序，按搜索到最多关键词排序,只有一个关键词就不用按关键词排序了
@@ -164,15 +167,15 @@ function getRandomBook(data) {
     result = indexArr.map((item) => {
         return books[item]
     })
-    console.log(result)
     return result
 }
 
 //创建每个li标签
-function createLi({ text = '', url = '', className = '', keywords = '' }) {
+function createLi({ id, text = '', url = '', className = '', keywords = '', date = new Date().valueOf() }) {
     const li = document.createElement('li')
     const a = document.createElement('a')
     const img = document.createElement('img')
+    date = new Date(date)
     if (!url) {
         url = 'https://www.baidu.com/s?wd=' + keywords
     }
@@ -188,7 +191,26 @@ function createLi({ text = '', url = '', className = '', keywords = '' }) {
     li.appendChild(img)
     a.innerHTML = tmpText
     a.href = url
+    a.title = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
     a.target = '_blank'
+    if (id) {
+        const edit = document.createElement('button')
+        edit.className = 'edit'
+        edit.onclick = function(e){
+            e.preventDefault()
+            const newTitle = prompt("请输入新标题", text)
+            if(newTitle){
+                chrome.bookmarks.update(id, {
+                    title: newTitle
+                }, () => {
+                    // 重新加载
+                    list.innerHTML = ''
+                    getBookByKeyword(keywords) 
+                })
+            }  
+        }
+        a.appendChild(edit)
+    }
     li.appendChild(a)
     return li
 }
@@ -256,6 +278,6 @@ keyword.addEventListener('input', function (e) {
 })
 
 // 每次打开时，展示随机的书签
-document.body.onload = ()=>{
+document.body.onload = () => {
     getBookByKeyword('')
 }
