@@ -17,9 +17,11 @@ function getBookByKeyword(word) {
         } else if (isReg) {
             keywords = new RegExp(keywords.slice(1, -1), 'img')
             result = searchByRegExp(bookmarkArray, keywords)
+        } else if (keywords === 'random') {
+            result = getRandomBook(bookmarkArray)
         } else {
             keywords.split(' ').map((keyword) => {
-                result = result.concat(traverse(bookmarkArray, keyword))
+                result = traverse(bookmarkArray, keyword)
             })
         }
         //不存在搜索结果
@@ -146,6 +148,22 @@ function showNewSaveList(data, keywords) {
         return b.dateAdded - a.dateAdded
     })
     return result.slice(0, number)
+}
+
+// 获取随机的标签 默认返回10条 用于查看书签
+function getRandomBook(data) {
+    let result = []
+    const books = traverse(data, '', false)
+    const bookLength = books.length
+    const indexArr = []
+    for (var i = 0; i < 10; i++) {
+        indexArr.push(Math.floor(Math.random() * bookLength))
+    }
+    result = indexArr.map((item) => {
+        return books[item]
+    })
+    console.log(result)
+    return result
 }
 
 //创建每个li标签
