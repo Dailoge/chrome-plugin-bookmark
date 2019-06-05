@@ -17,7 +17,7 @@ function getBookByKeyword(word) {
         } else if (isReg) {
             keywords = new RegExp(keywords.slice(1, -1), 'img')
             result = searchByRegExp(bookmarkArray, keywords)
-        } else if (keywords === 'random') {
+        } else if (!keywords) {
             result = getRandomBook(bookmarkArray)
         } else {
             keywords.split(' ').map((keyword) => {
