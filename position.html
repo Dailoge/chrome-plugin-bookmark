@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>position</title>
+    <meta charset="utf8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+      * {
+        margin: 0px;
+        padding: 0px;
+        outline: none;
+      }
+      .content{
+        height: 1440px;
+      }
+      .test {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        /* 如果是默认基于body，且body是static定位，则这里的100%是屏幕的宽高，如果body是其他定位，或者定位于其他的元素，则这里的100%是相对定位的宽高 */
+        top: 0px;
+        left: 0px;
+        background: #f63;
+        overflow: hidden;
+        transform: translateZ(0px);
+      }
+    </style>
+    <script>
+      function changeAction() {
+        const test = document.querySelector('.test')
+        document.body.style = 'position: fixed'
+      }
+    </script>
+  </head>
+  <body>
+    <div style="">
+      <div class="content"></div>
+      <div class="test">
+        <button onclick="changeAction()">text</button>
+      </div>
+    </div>
+  </body>
+</html>

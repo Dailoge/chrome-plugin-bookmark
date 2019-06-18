@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <script type="text/javascript">
+            window.addEventListener('message', function(e) {
+                console.log('msg from child:', e)
+            })
+            function say() {
+                alert('parent.html')
+            }
+            function callChild() {
+                myFrame.window.say()
+                myFrame.window.document.getElementById('button').value =
+                    '调用结束'
+            }
+            window.onload = function() {
+                window.frames[0].postMessage('hello babi', '*')
+            }
+        </script>
+    </head>
+    <body>
+        <input
+            id="button"
+            type="button"
+            value="调用child.html中的函数say()"
+            onclick="callChild()"
+        />
+        <iframe name="myFrame" src="child.html"></iframe>
+        <iframe name="myFrame1" src="child.html"></iframe>
+    </body>
+</html>

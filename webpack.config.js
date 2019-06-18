@@ -1,6 +1,7 @@
 var webpack = require('webpack');
 var path = require('path');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var HtmlWebpackPlugin = require('html-webpack-plugin')
 //?presets[]=stage-0,presets[]=react,presets[]=es2015
 var setExternals= function() {
     /*var cortexConfig = require('./cortex.json');
@@ -17,32 +18,36 @@ var setExternals= function() {
 };
 
 var webpackConfig = {
-    entry: [
-        path.join(__dirname, 'src/index.js')
-    ],
+    entry: {
+        'index': [path.join(__dirname, 'src/index.js')]
+    },
     output: {
-        //libraryTarget: 'umd',
-        path:path.join(__dirname, 'dist'),
-        filename: 'bundle.js',
-        publicPath: '../'
+        filename: '[name].js',
+        path: path.join(__dirname, 'dist'),
+        publicPath: './',
+        chunkFilename: '[name].[chunkhash].js',
+        sourceMapFilename: '[name].map'
     },
     resolve: {
-        extensions: ['', '.js']
+        extensions: ['.vue', '.js', '.jsx', '.es6']
     },
     module: {
         loaders: [
             {
                 test: /\.js$/,
-                loaders: ['babel'],
+                loaders: ['babel-loader'],
                 exclude: /node_modules/
             }, {
                 test: /\.less$/,
-                loader: ExtractTextPlugin.extract("style-loader", "css-loader!less-loader")
+                loader: ExtractTextPlugin.extract({
+                    use: [
+                        'css-loader?minimize&-autoprefixer',
+                        'postcss-loader',
+                        'less-loader'
+                    ],
+                    fallback: 'vue-style-loader'
+                })
                 //loader: "style-loader!css-loader!less-loader"
-            },
-            {
-                test: /\.html$/,
-                loader: "handlebars-loader"
             },
             {
                 test: /\.json$/,
@@ -62,13 +67,25 @@ var webpackConfig = {
     },
    // externals:setExternals(),
     plugins: [
-        new ExtractTextPlugin(path.join('css/page.css')),
         new webpack.DefinePlugin({
             'process.env': {
                 'NODE_ENV': JSON.stringify('production')
             }
+        }),
+        new HtmlWebpackPlugin({
+            title: '自定义页面',
+            filename: 'test.html'
         })
-    ]
+    ],
+    devServer: {
+        contentBase: './',
+        port: 1234,
+        disableHostCheck: true,
+        overlay: {
+            warnings: false,
+            errors: true,
+        }
+    },
 };
 
 

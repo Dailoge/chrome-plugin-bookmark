@@ -15,14 +15,14 @@
     }
 
     td {
-        border-bottom: 1px dashed #000;
+        border-bottom: 1px dashed #000; /*覆盖tr的样式 */
     }
 
     body {
         pointer-events: auto !important;
         background-size: cover !important;
         opacity: 0.9 !important;
-        background-position: 300px 300px !important;
+        background-position: 300px 300px !important; /* 雪碧图就是用这个，把position置为负值即可 */
         background-image: url('./apple.png') !important;
         content: '';
         position: absolute;

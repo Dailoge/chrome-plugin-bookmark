@@ -199,7 +199,7 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
         edit.onclick = function(e){
             e.preventDefault()
             const newTitle = prompt("请输入新标题", text)
-            if(newTitle){
+            if(newTitle && newTitle !== text){
                 chrome.bookmarks.update(id, {
                     title: newTitle
                 }, () => {
