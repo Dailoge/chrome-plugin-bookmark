@@ -136,15 +136,23 @@ a{
 #root #list li a span.word{
     color: #3A8FFF;
 }
-#root #list li a button.edit{
+#root #list li a button{
     display: inline-block;
     width: 16px;
     height: 16px;
-    background: url('../images/edit.png');
     background-size: cover;
     border: none;
     margin-left: 10px;
     position: relative;
     bottom: -2px;
     cursor: pointer;
+}
+#root #list li a button.edit{
+    background: url('../images/edit.png');
+    background-size: cover;
+}
+#root #list li a button.remove{
+    background: url('../images/remove.png');
+    background-size: cover;
+    margin-left: 5px;
 }

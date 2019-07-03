@@ -23,7 +23,7 @@ function getBookByKeyword(word) {
             result = getRandomBook(bookmarkArray)
         } else {
             keywords.split(' ').map((keyword) => {
-                result = traverse(bookmarkArray, keyword)
+                result = result.concat(traverse(bookmarkArray, keyword))
             })
         }
         //不存在搜索结果
@@ -50,24 +50,13 @@ function getBookByKeyword(word) {
         result.sort((a, b) => {
             return b.dateAdded - a.dateAdded
         })
-        const liArray = result.map((item) => {
-            let className = ''
-            return createLi({
-                id: item.id,
-                text: item.title,
-                url: item.url,
-                className: className,
-                keywords: keywords,
-                date: item.dateAdded
-            })
-        })
         //再次排序，按搜索到最多关键词排序,只有一个关键词就不用按关键词排序了
         if (!isReg && keywords.trim().split(' ').length > 1) {
             const tmpStr = keywords.trim().replace(/\s+/img, '|')
             const reg = new RegExp('(' + tmpStr + ')', 'img')
-            liArray.sort((a, b) => {
-                let bResult = b.innerHTML.match(reg)
-                let aResult = a.innerHTML.match(reg)
+            result.sort((a, b) => {
+                let bResult = b.title.match(reg)
+                let aResult = a.title.match(reg)
                 if (bResult) {
                     if (aResult) {
                         //转小写去重
@@ -83,6 +72,17 @@ function getBookByKeyword(word) {
                 }
             })
         }
+        const liArray = result.map((item) => {
+            let className = ''
+            return createLi({
+                id: item.id,
+                text: item.title,
+                url: item.url,
+                className: className,
+                keywords: keywords,
+                date: item.dateAdded
+            })
+        })
         liArray.map((item, index) => {
             let className = ''
             switch (index) {
@@ -194,6 +194,7 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
     a.title = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
     a.target = '_blank'
     if (id) {
+        // 添加编辑功能
         const edit = document.createElement('button')
         edit.className = 'edit'
         edit.onclick = function(e){
@@ -209,7 +210,22 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
                 })
             }  
         }
+         // 添加删除功能
+        const remove = document.createElement('button')
+        remove.className = 'remove'
+        remove.onclick = function(e){
+            e.preventDefault()
+            const result = confirm("你确认要删除吗? ")
+            if(result){
+                chrome.bookmarks.remove(id, () => {
+                    // 重新加载
+                    list.innerHTML = ''
+                    getBookByKeyword(keywords) 
+                })
+            }  
+        }
         a.appendChild(edit)
+        a.appendChild(remove)
     }
     li.appendChild(a)
     return li
