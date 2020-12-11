@@ -197,32 +197,41 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
         // 添加编辑功能
         const edit = document.createElement('button')
         edit.className = 'edit'
-        edit.onclick = function(e){
+        edit.onclick = function (e) {
             e.preventDefault()
-            const newTitle = prompt("请输入新标题", text)
-            if(newTitle && newTitle !== text){
-                chrome.bookmarks.update(id, {
-                    title: newTitle
-                }, () => {
-                    // 重新加载
-                    list.innerHTML = ''
-                    getBookByKeyword(keywords) 
-                })
-            }  
+            const separator = '$$'
+            const newContent = prompt("请输入新标题", `${text}${separator}${url}`)
+            // 取消的时候，newContent等于 null
+            if(!newContent) return
+            try {
+                const [newTitle, newUrl] = newContent.split(separator)
+                if ((newTitle && newTitle !== text) || (newUrl && newUrl !== url )) {
+                    chrome.bookmarks.update(id, {
+                        title: newTitle,
+                        url: newUrl,
+                    }, () => {
+                        // 重新加载
+                        list.innerHTML = ''
+                        getBookByKeyword(keywords)
+                    })
+                }
+            } catch (error) {
+                alert(JSON.stringify(error))
+            }
         }
-         // 添加删除功能
+        // 添加删除功能
         const remove = document.createElement('button')
         remove.className = 'remove'
-        remove.onclick = function(e){
+        remove.onclick = function (e) {
             e.preventDefault()
             const result = confirm("你确认要删除吗? ")
-            if(result){
+            if (result) {
                 chrome.bookmarks.remove(id, () => {
                     // 重新加载
                     list.innerHTML = ''
-                    getBookByKeyword(keywords) 
+                    getBookByKeyword(keywords)
                 })
-            }  
+            }
         }
         a.appendChild(edit)
         a.appendChild(remove)
