@@ -184,7 +184,8 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
     li.className = className
     const urlResult = url.match(/(http:|https:)\/\/(.*?)\//)
     if (urlResult && urlResult.length) {
-        img.src = 'chrome://favicon/' + urlResult[0]
+        // img.src = 'chrome://favicon/' + urlResult[0]
+        img.src = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(urlResult[0])}`
     } else {
         img.src = '../images/star.png'
     }
@@ -202,10 +203,10 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
             const separator = '$$'
             const newContent = prompt("请输入新标题", `${text}${separator}${url}`)
             // 取消的时候，newContent等于 null
-            if(!newContent) return
+            if (!newContent) return
             try {
                 const [newTitle, newUrl] = newContent.split(separator)
-                if ((newTitle && newTitle !== text) || (newUrl && newUrl !== url )) {
+                if ((newTitle && newTitle !== text) || (newUrl && newUrl !== url)) {
                     chrome.bookmarks.update(id, {
                         title: newTitle,
                         url: newUrl,
@@ -305,4 +306,5 @@ keyword.addEventListener('input', function (e) {
 // 每次打开时，展示随机的书签
 document.body.onload = () => {
     getBookByKeyword('')
+    console.log(chrome)
 }
