@@ -183,7 +183,7 @@ function createLi({ id, text = '', url = '', className = '', keywords = '', date
 
     li.className = className
     const urlResult = url.match(/(http:|https:)\/\/(.*?)\//)
-    if (urlResult && urlResult.length) {
+    if (urlResult && urlResult.length && !urlResult[0].includes('.ant') && !urlResult[0].includes('.ali')) {
         // img.src = 'chrome://favicon/' + urlResult[0]
         img.src = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(urlResult[0])}`
     } else {
